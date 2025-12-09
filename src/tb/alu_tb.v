@@ -1,8 +1,9 @@
 module alu_tb;
 
-reg [1:0]opp_code;
-reg [7:0]operandA,operandB;
-wire [7:0]result;
+reg [1:0]  opp_code;
+reg [7:0]  operandA;
+reg [7:0]  operandB;
+wire [7:0] result;
 
 alu dut(operandA,operandB,opp_code,result);
 
