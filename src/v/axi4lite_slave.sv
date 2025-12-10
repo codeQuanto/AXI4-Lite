@@ -44,11 +44,12 @@ module axi4lite_slave (
 
   // read addr logic
   always @(posedge A_CLK) begin
-    if (ar_valid) begin
-      AR_VALID <= 1'b1;
+    if (ar_ready) begin
+      AR_READY <= 1'b1;
     end
+    // hold valid high until handshake
     if (AR_VALID && AR_READY) begin
-      AR_VALID <= 1'b0;
+      AR_READY <= 1'b0;
     end
   end
 
@@ -60,6 +61,7 @@ module axi4lite_slave (
       if (r_valid) begin
         R_VALID <= 1'b1;
       end
+      // hold valid high until handshake
       if (R_VALID && R_READY) begin
         R_VALID <= 1'b0;
       end
