@@ -1,3 +1,5 @@
+`include "params.vh"
+
 interface axi4lite_if (input A_CLK, input A_RSTn);
   // AW channel
   logic                      AW_VALID;
@@ -25,13 +27,15 @@ interface axi4lite_if (input A_CLK, input A_RSTn);
   logic [1:0]                R_RESP;
 
   // Master perspective
-  modport master ( input  AW_READY, W_READY, B_VALID, B_RESP,
+  modport master ( input  A_CLK, A_RSTn,
+                          AW_READY, W_READY, B_VALID, B_RESP,
                           AR_READY, R_VALID, R_DATA, R_RESP,
                    output AW_VALID, AW_ADDR, AW_PROT, W_VALID, W_DATA, W_STRB, B_READY,
                           AR_VALID, AR_ADDR, AR_PROT, R_READY
   );
   // Slave perspective
-  modport slave ( input  AW_VALID, AW_ADDR, AW_PROT, W_VALID, W_DATA, W_STRB, B_READY,
+  modport slave ( input  A_CLK, A_RSTn,
+                         AW_VALID, AW_ADDR, AW_PROT, W_VALID, W_DATA, W_STRB, B_READY,
                          AR_VALID, AR_ADDR, AR_PROT, R_READY,
                   output AW_READY, W_READY, B_VALID, B_RESP,
                          AR_READY, R_VALID, R_DATA, R_RESP
