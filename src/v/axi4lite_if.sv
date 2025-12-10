@@ -2,29 +2,29 @@
 
 interface axi4lite (input A_CLK, input A_RSTn);
   // AW channel
-  logic                        AW_VALID;
-  logic                        AW_READY;
-  logic [AXI_ADDR_WIDTH-1:0]   AW_ADDR;
-  logic [2:0]                  AW_PROT;
+  logic                      AW_VALID;
+  logic                      AW_READY;
+  logic [AXI_ADDR_WIDTH-1:0] AW_ADDR;
+  logic [2:0]                AW_PROT;
   // W channel
-  logic                        W_VALID;
-  logic                        W_READY;
-  logic [AXI_DATA_WIDTH-1:0]   W_DATA;
-  logic [AXI_DATA_WIDTH/8-1:0] W_STRB;
+  logic                      W_VALID;
+  logic                      W_READY;
+  logic [AXI_DATA_WIDTH-1:0] W_DATA;
+  logic [AXI_STRB_WIDTH-1:0] W_STRB;
   // B channel
-  logic                        B_VALID;
-  logic                        B_READY;
-  logic [1:0]                  B_RESP;
+  logic                      B_VALID;
+  logic                      B_READY;
+  logic [1:0]                B_RESP;
   // AR channel
-  logic                        AR_VALID;
-  logic                        AR_READY;
-  logic [AXI_ADDR_WIDTH-1:0]   AR_ADDR;
-  logic [2:0]                  AR_PROT;
+  logic                      AR_VALID;
+  logic                      AR_READY;
+  logic [AXI_ADDR_WIDTH-1:0] AR_ADDR;
+  logic [2:0]                AR_PROT;
   // R channel
-  logic                        R_VALID;
-  logic                        R_READY;
-  logic [AXI_DATA_WIDTH-1:0]   R_DATA;
-  logic [1:0]                  R_RESP;
+  logic                      R_VALID;
+  logic                      R_READY;
+  logic [AXI_DATA_WIDTH-1:0] R_DATA;
+  logic [1:0]                R_RESP;
 
   // Master perspective
   modport master ( input  AW_READY, W_READY, B_VALID, B_RESP,

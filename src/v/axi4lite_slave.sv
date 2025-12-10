@@ -7,63 +7,79 @@ module axi4lite_slave (
   axi4lite_if axi_if
 );
 
+  // declaring internal signals
+  logic aw_ready;
+  logic w_ready;
+  logic b_valid;
+  logic ar_ready;
+  logic r_valid;
+
+  assign AW_READY = aw_ready;
+  assign W_READY  = w_ready;
+  assign B_VALID  = b_valid;
+  assign AR_READY = ar_ready;
+  assign R_VALID  = r_valid;
+
+
+  // Uppercase for input, lowercase for output
+
   // write addr logic
   always @(posedge A_CLK) begin
-    if (aw_ready) begin
-      AW_READY <= 1'b1;
+    if () begin
+      aw_ready <= 1'b1;
     end
     // hold ready high until handshake
-    if (AW_VALID && AW_READY) begin
-      AW_READY <= 1'b0;
+    if (AW_VALID && aw_ready) begin
+      aw_ready <= 1'b0;
     end
   end
 
   // write data logic
   always @(posedge A_CLK) begin
-    if (w_ready) begin
-      W_READY <= 1'b1;
+    if () begin
+      w_ready <= 1'b1;
     end
     // hold ready high until handshake
-    if (W_VALID && W_READY) begin
-      W_READY <= 1'b0;
+    if (W_VALID && w_ready) begin
+      w_ready <= 1'b0;
     end
   end
 
   // write resp logic
   always @(posedge A_CLK) begin
     if (!A_RSTn) begin
-      B_VALID <= 1'b0;
+      b_valid <= 1'b0;
     end else begin
       // TODO setting B ready and B resp
       // hold ready high until handshake
-      if (B_VALID && B_READY) begin
-        B_READY <= 1'b0;
+      if (b_valid && B_READY) begin
+        b_valid <= 1'b0;
       end
     end
   end
 
   // read addr logic
   always @(posedge A_CLK) begin
-    if (ar_ready) begin
-      AR_READY <= 1'b1;
+    if () begin
+      ar_ready <= 1'b1;
     end
     // hold valid high until handshake
-    if (AR_VALID && AR_READY) begin
-      AR_READY <= 1'b0;
+    if (AR_VALID && ar_ready) begin
+      ar_ready <= 1'b0;
     end
   end
 
   // read data logic
   always @(posedge A_CLK) begin
     if (!A_RSTn) begin
-      R_VALID <= 1'b0;
+      r_valid <= 1'b0;
     end else begin
-      if (r_valid) begin
-        R_VALID <= 1'b1;
+      if () begin
+        r_valid <= 1'b1;
       end
       // hold valid high until handshake
-      if (R_VALID && R_READY) begin
-        R_VALID <= 1'b0;
+      if (r_valid && R_READY) begin
+        r_valid <= 1'b0;
       end
     end
   end
