@@ -1,4 +1,4 @@
-module axi4_lite_slave (
+module axi4lite_slave (
   input      [7:0] operandA,
   input      [7:0] operandB,
   input      [1:0] opp_code,

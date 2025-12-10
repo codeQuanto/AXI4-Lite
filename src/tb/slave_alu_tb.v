@@ -5,7 +5,7 @@ reg [7:0]  operandB;
 reg [1:0]  opp_code;
 wire [7:0] result;
 
-axi4_lite_slave dut(
+axi4lite_slave dut(
   .operandA (operandA2),
   .operandB (operandB),
   .opp_code (opp_code),
