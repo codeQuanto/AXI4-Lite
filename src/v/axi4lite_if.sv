@@ -1,6 +1,4 @@
-`include "params.vh"
-
-interface axi4lite (input A_CLK, input A_RSTn);
+interface axi4lite_if (input A_CLK, input A_RSTn);
   // AW channel
   logic                      AW_VALID;
   logic                      AW_READY;

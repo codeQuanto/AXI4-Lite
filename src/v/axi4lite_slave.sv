@@ -1,89 +1,59 @@
-/* output dla slave
- * output AW_READY, W_READY, B_VALID, B_RESP,
- * AR_READY, R_VALID, R_DATA, R_RESP
-*/
-
 module axi4lite_slave (
   axi4lite_if axi_if
 );
 
   // declaring internal signals
-  logic aw_ready;
-  logic w_ready;
-  logic b_valid;
-  logic ar_ready;
-  logic r_valid;
+  typedef enum logic [2:0] {IDLE, WRITE, W_RESP, READ_ADDR, READ_DATA} state_t;
+  state_t curr_state;
+  state_t next_state;
 
-  assign AW_READY = aw_ready;
-  assign W_READY  = w_ready;
-  assign B_VALID  = b_valid;
-  assign AR_READY = ar_ready;
-  assign R_VALID  = r_valid;
+  logic w_addr_flag;
+  logic w_data_flag;
 
+  // Setting proper flags based on current state
+  // AW
+  assign axi_if.AW_READY    = (curr_state == WRITE)     ? 1'b1 : 1'b0;
+  // W
+  assign axi_if.W_READY     = (curr_state == WRITE)     ? 1'b1 : 1'b0;
+  assign w_addr_flag = axi_if.AW_VALID && axi_if.AW_READY;
+  assign w_data_flag = axi_if.W_VALID && axi_if.W_READY  ;
+  // B
+  assign axi_if.B_VALID     = (curr_state == W_RESP)    ? 1'b1 : 1'b0;
+  assign axi_if.B_RESP      = (curr_state == W_RESP)    ? 2'b0 : 2'b0; // TODO response is always OKAY
+  // AR
+  assign axi_if.AR_READY    = (curr_state == READ_ADDR) ? 1'b1 : 1'b0;
+  // R
+  assign axi_if.R_VALID     = (curr_state == READ_DATA) ? 1'b1 : 1'b0;
+  assign axi_if.R_DATA      = (curr_state == READ_DATA) ? {AXI_DATA_WIDTH{1'b1}} : 1'b0; // TODO add real data
+  assign axi_if.R_RESP      = (curr_state == READ_DATA) ? 2'b0 : 2'b0; // TODO response is always OKAY
 
-  // Uppercase for input, lowercase for output
+  // TODO for now, writtig transaction does nothing
 
-  // write addr logic
-  always @(posedge A_CLK) begin
-    if () begin
-      aw_ready <= 1'b1;
-    end
-    // hold ready high until handshake
-    if (AW_VALID && aw_ready) begin
-      aw_ready <= 1'b0;
-    end
-  end
-
-  // write data logic
-  always @(posedge A_CLK) begin
-    if () begin
-      w_ready <= 1'b1;
-    end
-    // hold ready high until handshake
-    if (W_VALID && w_ready) begin
-      w_ready <= 1'b0;
-    end
-  end
-
-  // write resp logic
-  always @(posedge A_CLK) begin
-    if (!A_RSTn) begin
-      b_valid <= 1'b0;
+  // moving forward with the transaction
+  always_ff @(posedge axi_if.A_CLK) begin
+    if (!axi_if.A_RSTn) begin
+      curr_state <= IDLE;
     end else begin
-      // TODO setting B ready and B resp
-      // hold ready high until handshake
-      if (b_valid && B_READY) begin
-        b_valid <= 1'b0;
-      end
+      curr_state <= next_state;
     end
   end
 
-  // read addr logic
-  always @(posedge A_CLK) begin
-    if () begin
-      ar_ready <= 1'b1;
-    end
-    // hold valid high until handshake
-    if (AR_VALID && ar_ready) begin
-      ar_ready <= 1'b0;
-    end
+  // setting ordinary of the transaction
+  always_comb begin
+    case (curr_state)
+      IDLE      : begin // TODO what if ar and ar valid are both high?
+                    if (axi_if.AW_VALID) begin
+                      next_state = WRITE;
+                    end else if (axi_if.AR_VALID) begin
+                      next_state = READ_ADDR;
+                    end
+                  end
+      WRITE     : next_state = W_RESP;
+      W_RESP    : next_state = IDLE;
+      READ_ADDR : next_state = READ_DATA;
+      READ_DATA : next_state = IDLE;
+      default   : next_state = IDLE;
+    endcase
   end
-
-  // read data logic
-  always @(posedge A_CLK) begin
-    if (!A_RSTn) begin
-      r_valid <= 1'b0;
-    end else begin
-      if () begin
-        r_valid <= 1'b1;
-      end
-      // hold valid high until handshake
-      if (r_valid && R_READY) begin
-        r_valid <= 1'b0;
-      end
-    end
-  end
-
-  // TODO add RRESP service
 
 endmodule
