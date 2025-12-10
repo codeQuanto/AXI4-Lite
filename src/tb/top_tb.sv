@@ -1,0 +1,31 @@
+module top_tb;
+
+  bit clk, rst;
+
+  // Create a clock
+  always #10 clk = ~clk;
+
+  axi4lite_if axi_if (
+    .A_CLK (clk),
+    .A_RSTn (rst)
+  );
+
+  axi4lite_slave dut (.axi_if (axi_if.slave));
+
+  initial begin
+    #2  rst = 1'b0;
+    #10 rst = 1'b1;
+    #18 dut.axi_if.AR_VALID = 1'b1;
+    #20 dut.axi_if.R_READY = 1'b1;
+    dut.axi_if.AR_VALID = 1'b0;
+    #20 dut.axi_if.R_READY = 1'b0;
+    #50 $finish();
+
+  end
+
+
+
+
+
+
+endmodule
