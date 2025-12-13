@@ -31,6 +31,13 @@ module top_tb;
         dut.axi_if.W_VALID  = 1'b0;
         dut.axi_if.B_READY  = 1'b1;
     #20 dut.axi_if.B_READY  = 1'b0;
+    // check if value was wrote into memory
+    #20 dut.axi_if.AR_VALID = 1'b1;
+        dut.axi_if.AR_ADDR  = 'b1;
+        dut.axi_if.AR_PROT  = 3'b0;
+    #20 dut.axi_if.R_READY  = 1'b1;
+        dut.axi_if.AR_VALID = 1'b0;
+    #20 dut.axi_if.R_READY  = 1'b0;
     #50 $finish();
 
   end
