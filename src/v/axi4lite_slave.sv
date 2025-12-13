@@ -49,18 +49,8 @@ module axi4lite_slave (
   always_ff @(posedge axi_if.A_CLK) begin
     if (!axi_if.A_RSTn) begin
       curr_state <= IDLE;
-      aw_handshake_flag <= 1'b0;
-      w_handshake_flag  <= 1'b0;
     end else begin
       curr_state <= next_state;
-      if (curr_state == WRITE) begin
-        if (aw_handshake) aw_handshake_flag <= 1'b1;
-        if (w_handshake)  w_handshake_flag  <= 1'b1;
-      end
-      if (aw_handshake_flag && w_handshake_flag) begin
-        aw_handshake_flag <= 1'b0;
-        w_handshake_flag  <= 1'b0;
-      end
     end
   end
 
@@ -76,8 +66,16 @@ module axi4lite_slave (
                       next_state = IDLE;
                     end
                   end
-      WRITE     : if (aw_handshake_flag && w_handshake_flag) next_state = W_RESP;
-      W_RESP    : if (axi_if.B_VALID  && axi_if.B_READY)  next_state = IDLE;
+      WRITE     : begin
+                    if (aw_handshake) aw_handshake_flag = 1'b1;
+                    if (w_handshake)  w_handshake_flag  = 1'b1;
+                    if (aw_handshake_flag && w_handshake_flag) next_state = W_RESP;
+                  end
+      W_RESP    : begin
+                    if (axi_if.B_VALID  && axi_if.B_READY)  next_state = IDLE;
+                    aw_handshake_flag = 1'b0;
+                    w_handshake_flag  = 1'b0;
+                  end
       READ_ADDR : if (axi_if.AR_VALID && axi_if.AR_READY) next_state = READ_DATA;
       READ_DATA : if (axi_if.R_VALID  && axi_if.R_READY)  next_state = IDLE;
       default   : next_state = IDLE;
