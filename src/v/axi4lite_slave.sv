@@ -28,8 +28,6 @@ module axi4lite_slave (
   assign axi_if.R_DATA      = (curr_state == READ_DATA) ? {AXI_DATA_WIDTH{1'b1}} : {AXI_DATA_WIDTH{1'b0}}; // TODO add real data
   assign axi_if.R_RESP      = (curr_state == READ_DATA) ? 2'b1 : 2'b0; // TODO response is always 1'b1 - just to observe the reaction (should be 0)
 
-  // TODO for now, writtig transaction does nothing
-
   // moving forward with the transaction
   always_ff @(posedge axi_if.A_CLK) begin
     if (!axi_if.A_RSTn) begin

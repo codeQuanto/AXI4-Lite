@@ -14,7 +14,7 @@ operandA = 50; operandB = 10; opp_code = 0;
 
 for(i = 1; i < 4; i = i+ 1)begin
     #10
-    opp_code = i;
+    opp_code = logic [1:0]'(i);
 end
 
 #10
