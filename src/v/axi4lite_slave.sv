@@ -1,34 +1,6 @@
 //`include "params.vh"
 module axi4lite_slave (
-  // Global
-  // /input  logic A_CLK, 
-  // /input  logic A_RSTn,
   axi4lite_if  axi_if
-  /*
-  // AW channel
-  input  logic                      AW_VALID,
-  output logic                      AW_READY,
-  input  logic [AXI_ADDR_WIDTH-1:0] AW_ADDR,
-  // input  logic [2:0]                AW_PROT,
-  // W channel
-  input  logic                      W_VALID,
-  output logic                      W_READY,
-  input  logic [AXI_DATA_WIDTH-1:0] W_DATA,
-  // inout  logic [AXI_STRB_WIDTH-1:0] W_STRB,
-  // B channel
-  output logic                      B_VALID,
-  input  logic                      B_READY,
-  output logic [1:0]                B_RESP,
-  // AR channel
-  input  logic                      AR_VALID,
-  output logic                      AR_READY,
-  input  logic [AXI_ADDR_WIDTH-1:0] AR_ADDR,
-  // input  logic [2:0]                AR_PROT,
-  // R channel
-  output logic                      R_VALID,
-  input  logic                      R_READY,
-  output logic [AXI_DATA_WIDTH-1:0] R_DATA,
-  output logic [1:0]                R_RESP */
 );
 
   // declaring internal signals

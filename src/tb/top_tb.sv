@@ -9,43 +9,24 @@ module top_tb(
   logic aresetn;
   logic [31:0] data;
 
-  axi_vip_0_mst_t axi_master;
+  axi_vip_0_mst_t axi_master; // master agent
 
-  vivado_axi4_lite_v1_0 M_AXI();
-  axi4lite_if axi_if(aclk, aresetn);
-  
+  vivado_axi4_lite_v1_0 M_AXI();     // VIP master interface
+  axi4lite_if axi_if(aclk, aresetn); // custom interface
+
+  // VIP instation
   axi_vip_0_sv axi_vip_i (
     .M_AXI(M_AXI.master), // vivado_axi4_lite_v1_0.master M_AXI
     .aclk(aclk),          // input wire aclk
     .aresetn(aresetn)     // input wire aresetn
   );
 
-
-
+  // DUT instation
   axi4lite_slave dut (
-    //.A_CLK    (aclk),
-    //.A_RSTn   (aresetn),
     .axi_if   (axi_if.slave)
-
-    /*
-    .AW_VALID (M_AXI.m_axi_awvalid),
-    .AW_READY (M_AXI.m_axi_awready),
-    .AW_ADDR  (M_AXI.m_axi_awaddr),
-    .W_VALID  (M_AXI.m_axi_wvalid),
-    .W_READY  (M_AXI.m_axi_wready),
-    .W_DATA   (M_AXI.m_axi_wdata),
-    .B_VALID  (M_AXI.m_axi_bvalid),
-    .B_READY  (M_AXI.m_axi_bready),
-    .B_RESP   (M_AXI.m_axi_bresp),
-    .AR_VALID (M_AXI.m_axi_arvalid),
-    .AR_READY (M_AXI.m_axi_arready),
-    .AR_ADDR  (M_AXI.m_axi_araddr),
-    .R_VALID  (M_AXI.m_axi_rvalid),
-    .R_READY  (M_AXI.m_axi_rready),
-    .R_DATA   (M_AXI.m_axi_rdata),
-    .R_RESP   (M_AXI.m_axi_rresp) */
   );
 
+// DUT-VIP connection
 assign axi_if.AW_VALID = M_AXI.AWVALID;
 assign axi_if.AW_ADDR  = M_AXI.AWADDR;
 assign axi_if.W_VALID  = M_AXI.WVALID;
@@ -64,16 +45,19 @@ assign M_AXI.RVALID  = axi_if.R_VALID;
 assign M_AXI.RDATA   = axi_if.R_DATA;
 assign M_AXI.RRESP   = axi_if.R_RESP;
 
+// clk creation
 initial aclk = 0;
 always #10 aclk = ~aclk;
 
+// initial reset
 initial begin
   aresetn = 0;
   #50;
   aresetn = 1;
 end
 
-initial begin
+// main test block
+initial begin : main_test_b
 
   wait(aresetn == 1);
   @(posedge aclk);
@@ -84,6 +68,6 @@ initial begin
   // tutaj trzeba poczytac w poradniku VIPa jak to zrobic. Widzialem inne komendy, inny 'workflow'
   //axi_master.write(32'h0000_0004, 32'h1234_5678);
   //axi_master.read (32'h0000_0004, data);
-end
+end : main_test_b
 
 endmodule
