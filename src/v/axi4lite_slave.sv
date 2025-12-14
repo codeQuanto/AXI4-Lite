@@ -45,17 +45,28 @@ module axi4lite_slave (
   assign axi_if.R_DATA      = (curr_state == READ_DATA) ? read_data : {AXI_DATA_WIDTH{1'b0}};
   assign axi_if.R_RESP      = (curr_state == READ_DATA) ? 2'b1 : 2'b0; // TODO response is always 1'b1 - just to observe the reaction (should be 0)
 
-  // moving forward with the transaction
-  always_ff @(posedge axi_if.A_CLK) begin
+  always_comb begin : flag_handling_b
+    case (curr_state)
+      WRITE : begin 
+                if (aw_handshake) aw_handshake_flag = 1'b1;
+                if (w_handshake)  w_handshake_flag  = 1'b1;
+              end
+      W_RESP : begin
+                aw_handshake_flag = 1'b0;
+                w_handshake_flag  = 1'b0;
+              end
+    endcase
+  end : flag_handling_b
+
+  always_ff @(posedge axi_if.A_CLK) begin : driving_state_b
     if (!axi_if.A_RSTn) begin
       curr_state <= IDLE;
     end else begin
       curr_state <= next_state;
     end
-  end
+  end : driving_state_b
 
-  // state machine for the transaction flow
-  always_comb begin
+  always_comb begin : state_machine_logic_b
     case (curr_state)
       IDLE      : begin
                     if (axi_if.AR_VALID) begin
@@ -66,20 +77,12 @@ module axi4lite_slave (
                       next_state = IDLE;
                     end
                   end
-      WRITE     : begin
-                    if (aw_handshake) aw_handshake_flag = 1'b1;
-                    if (w_handshake)  w_handshake_flag  = 1'b1;
-                    if (aw_handshake_flag && w_handshake_flag) next_state = W_RESP;
-                  end
-      W_RESP    : begin
-                    if (axi_if.B_VALID  && axi_if.B_READY)  next_state = IDLE;
-                    aw_handshake_flag = 1'b0;
-                    w_handshake_flag  = 1'b0;
-                  end
-      READ_ADDR : if (axi_if.AR_VALID && axi_if.AR_READY) next_state = READ_DATA;
-      READ_DATA : if (axi_if.R_VALID  && axi_if.R_READY)  next_state = IDLE;
+      WRITE     : if (aw_handshake_flag && w_handshake_flag) next_state = W_RESP;
+      W_RESP    : if (axi_if.B_VALID  && axi_if.B_READY)     next_state = IDLE;
+      READ_ADDR : if (axi_if.AR_VALID && axi_if.AR_READY)    next_state = READ_DATA;
+      READ_DATA : if (axi_if.R_VALID  && axi_if.R_READY)     next_state = IDLE;
       default   : next_state = IDLE;
     endcase
-  end
+  end : state_machine_logic_b
 
 endmodule
