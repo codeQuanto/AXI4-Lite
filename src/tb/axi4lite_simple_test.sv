@@ -1,4 +1,4 @@
-module top_tb;
+module axi4lite_simple_test_tb;
 
   bit clk, rst;
 
@@ -17,16 +17,16 @@ module top_tb;
     #10 rst = 1'b1;
     #18 dut.axi_if.AR_VALID = 1'b1;
         dut.axi_if.AR_ADDR  = 'b1;
-        dut.axi_if.AR_PROT  = 3'b0;
+        //dut.axi_if.AR_PROT  = 3'b0;
     #20 dut.axi_if.R_READY  = 1'b1;
         dut.axi_if.AR_VALID = 1'b0;
     #20 dut.axi_if.R_READY  = 1'b0;
     #20 dut.axi_if.AW_VALID = 1'b1;
         dut.axi_if.AW_ADDR  = 'b1;
-        dut.axi_if.AW_PROT  = 3'b0;
+        //dut.axi_if.AW_PROT  = 3'b0;
         dut.axi_if.W_VALID  = 1'b1;
         dut.axi_if.W_DATA   = 'b1;
-        dut.axi_if.W_STRB   = 4'b0;
+        //dut.axi_if.W_STRB   = 4'b0;
     #20 dut.axi_if.AW_VALID = 1'b0;
         dut.axi_if.W_VALID  = 1'b0;
         dut.axi_if.B_READY  = 1'b1;
@@ -34,7 +34,7 @@ module top_tb;
     // check if value was wrote into memory
     #20 dut.axi_if.AR_VALID = 1'b1;
         dut.axi_if.AR_ADDR  = 'b1;
-        dut.axi_if.AR_PROT  = 3'b0;
+        //dut.axi_if.AR_PROT  = 3'b0;
     #20 dut.axi_if.R_READY  = 1'b1;
         dut.axi_if.AR_VALID = 1'b0;
     #20 dut.axi_if.R_READY  = 1'b0;
