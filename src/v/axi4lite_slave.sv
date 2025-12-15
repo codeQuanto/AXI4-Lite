@@ -12,7 +12,8 @@ module axi4lite_slave (
   logic w_handshake;
   logic aw_handshake_flag;
   logic w_handshake_flag;
-
+  logic [AXI_DATA_WIDTH-1:0] aw_addr_latched;
+  logic [AXI_DATA_WIDTH-1:0] ar_addr_latched;
   logic write_en;
   logic [AXI_DATA_WIDTH-1:0] read_data;
 
@@ -21,9 +22,9 @@ module axi4lite_slave (
     .clk         (axi_if.A_CLK),
     .reset_n     (axi_if.A_RSTn),
     .write_en    (write_en),
-    .write_addr  (axi_if.AW_ADDR),
+    .write_addr  ( (axi_if.AW_VALID && axi_if.AW_READY) ? axi_if.AW_ADDR : aw_addr_latched ),
     .write_data  (axi_if.W_DATA),
-    .read_addr   (axi_if.AR_ADDR),
+    .read_addr   ( (axi_if.AR_VALID && axi_if.AR_READY) ? axi_if.AR_ADDR : ar_addr_latched ),
     .read_data   (read_data)
   );
 
@@ -37,13 +38,13 @@ module axi4lite_slave (
   assign write_en           = aw_handshake_flag && w_handshake_flag;
   // B
   assign axi_if.B_VALID     = (curr_state == W_RESP)    ? 1'b1 : 1'b0;
-  assign axi_if.B_RESP      = (curr_state == W_RESP)    ? 2'b1 : 2'b0; // TODO response is always 1'b1 - just to observe the reaction (should be 0)
+  assign axi_if.B_RESP      = (curr_state == W_RESP)    ? 2'b00 : 2'b00;
   // AR
   assign axi_if.AR_READY    = (curr_state == READ_ADDR) ? 1'b1 : 1'b0;
   // R
   assign axi_if.R_VALID     = (curr_state == READ_DATA) ? 1'b1 : 1'b0;
   assign axi_if.R_DATA      = (curr_state == READ_DATA) ? read_data : {AXI_DATA_WIDTH{1'b0}};
-  assign axi_if.R_RESP      = (curr_state == READ_DATA) ? 2'b1 : 2'b0; // TODO response is always 1'b1 - just to observe the reaction (should be 0)
+  assign axi_if.R_RESP      = (curr_state == READ_DATA) ? 2'b00 : 2'b00;
 
   always_comb begin : flag_handling_b
     case (curr_state)
@@ -57,6 +58,20 @@ module axi4lite_slave (
               end
     endcase
   end : flag_handling_b
+
+  always_ff @(posedge axi_if.A_CLK) begin : addr_latch_b
+      if (!axi_if.A_RSTn) begin
+          aw_addr_latched <= {AXI_DATA_WIDTH{1'b0}};
+          ar_addr_latched <= {AXI_DATA_WIDTH{1'b0}};
+      end else begin
+          if (axi_if.AW_VALID && axi_if.AW_READY) begin
+              aw_addr_latched <= axi_if.AW_ADDR;
+          end
+          if (axi_if.AR_VALID && axi_if.AR_READY) begin
+              ar_addr_latched <= axi_if.AR_ADDR;
+          end
+      end
+  end : addr_latch_b
 
   always_ff @(posedge axi_if.A_CLK) begin : driving_state_b
     if (!axi_if.A_RSTn) begin

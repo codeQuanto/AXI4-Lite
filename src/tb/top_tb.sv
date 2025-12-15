@@ -7,7 +7,6 @@ module top_tb(
 
   logic aclk;
   logic aresetn;
-  logic [31:0] data;
 
   axi_vip_0_mst_t axi_master; // master agent
 
@@ -52,22 +51,108 @@ always #10 aclk = ~aclk;
 // initial reset
 initial begin
   aresetn = 0;
-  #50;
+  #400;
   aresetn = 1;
 end
 
 // main test block
 initial begin : main_test_b
 
+  xil_axi_resp_t resp;      
+  logic [31:0]   rdata;     
+  logic [31:0]   expected;  
+  logic [31:0]   test_val;
+  
   wait(aresetn == 1);
   @(posedge aclk);
 
   axi_master = new("axi_master", top_tb.axi_vip_i.inst.inst.IF);
   axi_master.start_master();
 
-  // tutaj trzeba poczytac w poradniku VIPa jak to zrobic. Widzialem inne komendy, inny 'workflow'
-  //axi_master.write(32'h0000_0004, 32'h1234_5678);
-  //axi_master.read (32'h0000_0004, data);
+  $display("[TEST 1] Konfiguracja: 50 + 10 (ADD)");
+
+  axi_master.AXI4LITE_WRITE_BURST(32'h0000_0000, 0, 32'd50, resp);
+ 
+  axi_master.AXI4LITE_WRITE_BURST(32'h0000_0004, 0, 32'd10, resp);
+  
+  axi_master.AXI4LITE_WRITE_BURST(32'h0000_0008, 0, 32'd0, resp);
+
+  axi_master.AXI4LITE_READ_BURST(32'h0000_000C, 0, rdata, resp);
+
+  if (rdata == 32'd60) 
+      $display("[PASS] Odczytano poprawny wynik: %0d", rdata);
+  else 
+      $error("[FAIL] Oczekiwano 60, otrzymano: %0d", rdata);
+
+  #50;
+
+
+  $display("[TEST 2] Zmiana operacji na AND");
+
+  axi_master.AXI4LITE_WRITE_BURST(32'h0000_0008, 0, 32'd1, resp);
+  
+  axi_master.AXI4LITE_READ_BURST(32'h0000_000C, 0, rdata, resp);
+
+  if (rdata == 32'd2) 
+      $display("[PASS] Odczytano poprawny wynik: %0d", rdata);
+  else 
+      $error("[FAIL] Oczekiwano 2, otrzymano: %0d", rdata);
+
+  #50;
+
+  $display("[TEST 3] Przeplatane zmiany operacji");
+
+  // A=100 B=50 ADD=150
+  axi_master.AXI4LITE_WRITE_BURST(32'h0000_0000, 0, 32'd100, resp);
+  axi_master.AXI4LITE_WRITE_BURST(32'h0000_0004, 0, 32'd50, resp);
+  axi_master.AXI4LITE_WRITE_BURST(32'h0000_0008, 0, 32'd0, resp); 
+  
+  axi_master.AXI4LITE_READ_BURST(32'h0000_000C, 0, rdata, resp);
+  if (rdata != 150) $error("Blad! Otrzymano: %d", rdata);
+  else $display("[PASS] 100 + 50 = %0d", rdata);
+
+  // A=255(0xFF) B=0  AND=0
+  axi_master.AXI4LITE_WRITE_BURST(32'h0000_0000, 0, 32'hFF, resp);
+  axi_master.AXI4LITE_WRITE_BURST(32'h0000_0004, 0, 32'h00, resp);
+  axi_master.AXI4LITE_WRITE_BURST(32'h0000_0008, 0, 32'd1, resp); 
+
+  axi_master.AXI4LITE_READ_BURST(32'h0000_000C, 0, rdata, resp);
+  if (rdata != 0) $error("Blad! Otrzymano: %d", rdata);
+  else $display("[PASS] 0xFF & 0x00 = %0d", rdata);
+
+  #50; 
+  
+  $display("[TEST 4] R/W Check");
+
+  test_val = 32'hAABB_CCDD; 
+  $display("   -> Zapis do OperandA: %h", test_val);
+  axi_master.AXI4LITE_WRITE_BURST(32'h0000_0000, 0, test_val, resp); 
+  
+  #50;
+  
+  axi_master.AXI4LITE_READ_BURST(32'h0000_0000, 0, rdata, resp);     
+  if (rdata == test_val) $display("[PASS] Odczyt zgodny!");
+  else $error("[FAIL] Oczekiwano %h, odczytano %h", test_val, rdata);
+
+  #50;
+
+  $display("[TEST 5] Sekwencja do wizualizacji AXI (20 + 30)");
+
+  // ZapisA=20 
+  axi_master.AXI4LITE_WRITE_BURST(32'h0000_0000, 0, 32'd20, resp);
+  #200; 
+  // ZapisB=30
+  axi_master.AXI4LITE_WRITE_BURST(32'h0000_0004, 0, 32'd30, resp);
+  #200;
+
+  // Zapis OpCode=ADD
+  axi_master.AXI4LITE_WRITE_BURST(32'h0000_0008, 0, 32'd0, resp);
+  #200;
+
+  axi_master.AXI4LITE_READ_BURST(32'h0000_000C, 0, rdata, resp);
+  if (rdata == 50) $display("      [PASS] Wynik koncowy OK: %0d", rdata);
+
+  $finish;
 end : main_test_b
 
 endmodule
