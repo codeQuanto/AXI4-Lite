@@ -1,4 +1,4 @@
-`include "params.vh"
+//`include "params.vh"
 
 interface axi4lite_if (input A_CLK, input A_RSTn);
   // AW channel

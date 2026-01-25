@@ -1,4 +1,5 @@
 `include "vivado_interfaces.svh"
+//`include "params.vh"
 import axi_vip_pkg::*;
 import axi_vip_0_pkg::*;
 
@@ -151,6 +152,95 @@ initial begin : main_test_b
 
   axi_master.AXI4LITE_READ_BURST(32'h0000_000C, 0, rdata, resp);
   if (rdata == 50) $display("      [PASS] Wynik koncowy OK: %0d", rdata);
+
+  #200;
+
+  // ===== TESTY OPERACJI PAMIECIOWYCH =====
+  $display("\n[TEST 6] Memory Operations (M+, M-, MR, MC)");
+  
+  // Setup ALU: ADD 15 + 0 = 15
+  $display("   Setting up ALU: 15 + 0 = 15");
+  axi_master.AXI4LITE_WRITE_BURST(32'h0000_0000, 0, 32'd15, resp);
+  axi_master.AXI4LITE_WRITE_BURST(32'h0000_0004, 0, 32'd0, resp);
+  axi_master.AXI4LITE_WRITE_BURST(32'h0000_0008, 0, 32'd0, resp);  // ADD
+  #200;
+
+  // M+ test: reg[5] += 15 (result: 15)
+  $display("   -> M+ (add 15 to reg[5])");
+  axi_master.AXI4LITE_WRITE_BURST(32'h0000_0010, 0, 32'd5, resp);  // mem_sel = 5
+  axi_master.AXI4LITE_WRITE_BURST(32'h0000_0008, 0, 32'd4, resp);  // opcode = M+ (0x4)
+  #200;
+  axi_master.AXI4LITE_READ_BURST(32'h0000_0014, 0, rdata, resp);
+  if (rdata == 15) $display("      [PASS] reg[5] = %0d (expected 15)", rdata);
+  else $error("      [FAIL] reg[5] = %0d (expected 15)", rdata);
+  #200;
+
+  // M+ again: reg[5] += 15 (result: 30)
+  $display("   -> M+ again (accumulate 15, total = 30)");
+  axi_master.AXI4LITE_WRITE_BURST(32'h0000_0008, 0, 32'd4, resp);  // opcode = M+
+  #200;
+  axi_master.AXI4LITE_READ_BURST(32'h0000_0014, 0, rdata, resp);
+  if (rdata == 30) $display("      [PASS] reg[5] = %0d (expected 30)", rdata);
+  else $error("      [FAIL] reg[5] = %0d (expected 30)", rdata);
+  #200;
+
+  // Setup ALU: ADD 8 + 0 = 8
+  $display("   Setting up ALU: 8 + 0 = 8");
+  axi_master.AXI4LITE_WRITE_BURST(32'h0000_0000, 0, 32'd8, resp);
+  axi_master.AXI4LITE_WRITE_BURST(32'h0000_0004, 0, 32'd0, resp);
+  axi_master.AXI4LITE_WRITE_BURST(32'h0000_0008, 0, 32'd0, resp);  // ADD
+  #200;
+
+  // M- test: reg[5] -= 8 (result: 22)
+  $display("   -> M- (subtract 8 from reg[5], 30 - 8 = 22)");
+  axi_master.AXI4LITE_WRITE_BURST(32'h0000_0008, 0, 32'd5, resp);  // opcode = M- (0x5)
+  #200;
+  axi_master.AXI4LITE_READ_BURST(32'h0000_0014, 0, rdata, resp);
+  if (rdata == 22) $display("      [PASS] reg[5] = %0d (expected 22)", rdata);
+  else $error("      [FAIL] reg[5] = %0d (expected 22)", rdata);
+  #200;
+
+  // MR test: read reg[5] to reg[3]
+  $display("   -> MR (recall reg[5] to reg[3])");
+  axi_master.AXI4LITE_WRITE_BURST(32'h0000_0010, 0, 32'd5, resp);  // mem_sel = 5
+  axi_master.AXI4LITE_WRITE_BURST(32'h0000_0008, 0, 32'd6, resp);  // opcode = MR (0x6)
+  #200;
+  axi_master.AXI4LITE_READ_BURST(32'h0000_000C, 0, rdata, resp);
+  if (rdata == 22) $display("      [PASS] reg[3] = %0d (expected 22)", rdata);
+  else $error("      [FAIL] reg[3] = %0d (expected 22)", rdata);
+  #200;
+
+  // MC test: clear reg[5]
+  $display("   -> MC (clear reg[5])");
+  axi_master.AXI4LITE_WRITE_BURST(32'h0000_0008, 0, 32'd7, resp);  // opcode = MC (0x7)
+  #200;
+  axi_master.AXI4LITE_READ_BURST(32'h0000_0014, 0, rdata, resp);
+  if (rdata == 0) $display("      [PASS] reg[5] = %0d (expected 0)", rdata);
+  else $error("      [FAIL] reg[5] = %0d (expected 0)", rdata);
+  #200;
+
+  // ===== TEST LOAD A =====
+  $display("\n[TEST 7] Load A Operation");
+  
+  // Put value 42 in reg[6]
+  $display("   Storing 42 in reg[6]");
+  axi_master.AXI4LITE_WRITE_BURST(32'h0000_0018, 0, 32'd42, resp);
+  #200;
+
+  // Load A: reg[0] <= reg[6]
+  $display("   -> Load A (load reg[6]=42 to operandA)");
+  axi_master.AXI4LITE_WRITE_BURST(32'h0000_0010, 0, 32'd6, resp);  // mem_sel = 6
+  axi_master.AXI4LITE_WRITE_BURST(32'h0000_0008, 0, 32'd3, resp);  // opcode = Load A (0x3)
+  #200;
+
+  // Do ALU: 42 + 18 = 60
+  $display("   Setting up ALU: 42 (loaded) + 18 = 60");
+  axi_master.AXI4LITE_WRITE_BURST(32'h0000_0004, 0, 32'd18, resp);
+  axi_master.AXI4LITE_WRITE_BURST(32'h0000_0008, 0, 32'd0, resp);  // opcode = ADD
+  #200;
+  axi_master.AXI4LITE_READ_BURST(32'h0000_000C, 0, rdata, resp);
+  if (rdata == 60) $display("      [PASS] reg[3] = %0d (expected 60)", rdata);
+  else $error("      [FAIL] reg[3] = %0d (expected 60)", rdata);
 
   $finish;
 end : main_test_b
