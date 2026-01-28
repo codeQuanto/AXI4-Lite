@@ -1,4 +1,4 @@
-//`include "params.vh"
+`include "params.vh"
 
 module axi4lite_slave (
   input  logic                      A_CLK,
@@ -35,8 +35,8 @@ module axi4lite_slave (
   logic w_handshake;
   logic aw_handshake_flag;
   logic w_handshake_flag;
-  logic [AXI_DATA_WIDTH-1:0] aw_addr_latched;
-  logic [AXI_DATA_WIDTH-1:0] ar_addr_latched;
+  logic [AXI_ADDR_WIDTH-1:0] aw_addr_latched;  // Fixed: was AXI_DATA_WIDTH
+  logic [AXI_ADDR_WIDTH-1:0] ar_addr_latched;  // Fixed: was AXI_DATA_WIDTH
   logic write_en;
   logic [AXI_DATA_WIDTH-1:0] read_data;
 
@@ -45,9 +45,9 @@ module axi4lite_slave (
     .clk         (A_CLK),
     .reset_n     (A_RSTn),
     .write_en    (write_en),
-    .write_addr  ( (AW_VALID && AW_READY) ? AW_ADDR : aw_addr_latched ),
+    .write_addr  (aw_addr_latched),
     .write_data  (W_DATA),
-    .read_addr   ( (AR_VALID && AR_READY) ? AR_ADDR : ar_addr_latched ),
+    .read_addr   (ar_addr_latched),
     .read_data   (read_data)
   );
 
@@ -88,8 +88,8 @@ module axi4lite_slave (
 
   always_ff @(posedge A_CLK) begin : addr_latch_b
       if (!A_RSTn) begin
-          aw_addr_latched <= {AXI_DATA_WIDTH{1'b0}};
-          ar_addr_latched <= {AXI_DATA_WIDTH{1'b0}};
+          aw_addr_latched <= {AXI_ADDR_WIDTH{1'b0}};  // Fixed: was AXI_DATA_WIDTH
+          ar_addr_latched <= {AXI_ADDR_WIDTH{1'b0}};  // Fixed: was AXI_DATA_WIDTH
       end else begin
           if (AW_VALID && AW_READY) begin
               aw_addr_latched <= AW_ADDR;

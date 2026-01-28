@@ -1,5 +1,3 @@
-//`include "params.vh"
-
 module reg_bank (
   input  logic        clk,
   input  logic        reset_n,
@@ -13,9 +11,9 @@ module reg_bank (
   // registers bank - 16 registers
   logic [31:0] reg_bank [15:0];
 
-  // mapped addresses
-  logic [7:0]  write_idx;
-  logic [7:0]  read_idx;
+  // mapped addresses - direct use of lower 4 bits
+  logic [3:0]  write_idx;
+  logic [3:0]  read_idx;
 
   logic [3:0]  mem_sel;
   logic [7:0]  operandA;
@@ -25,9 +23,9 @@ module reg_bank (
   logic        mem_en;
   logic [7:0]  result;
 
-  // address mapping
-  assign write_idx = { 4'b0, write_addr[5:2]};
-  assign read_idx  = { 4'b0, read_addr[5:2]};
+  // address mapping - word-aligned (bits [5:2] for 16 registers)
+  assign write_idx = write_addr[5:2];
+  assign read_idx  = read_addr[5:2];
 
   // drive output
   assign read_data = reg_bank[read_idx];
@@ -68,6 +66,7 @@ module reg_bank (
       foreach (reg_bank[index]) begin
         reg_bank[index] <= 32'b0;
       end
+      mem_en <= 1'b0;
     end else begin
       // ALU operations
       reg_bank[3][7:0] <= result;

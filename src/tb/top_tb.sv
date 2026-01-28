@@ -12,7 +12,6 @@ module top_tb(
   axi_vip_0_mst_t axi_master; // master agent
 
   vivado_axi4_lite_v1_0 M_AXI();     // VIP master interface
-  axi4lite_if axi_if(aclk, aresetn); // custom interface
 
   // VIP instation
   axi_vip_0_sv axi_vip_i (
@@ -21,29 +20,32 @@ module top_tb(
     .aresetn(aresetn)     // input wire aresetn
   );
 
-  // DUT instation
+  // DUT instation - now with individual ports
   axi4lite_slave dut (
-    .axi_if   (axi_if.slave)
+    .A_CLK      (aclk),
+    .A_RSTn     (aresetn),
+    // AW channel
+    .AW_VALID   (M_AXI.AWVALID),
+    .AW_READY   (M_AXI.AWREADY),
+    .AW_ADDR    (M_AXI.AWADDR),
+    // W channel
+    .W_VALID    (M_AXI.WVALID),
+    .W_READY    (M_AXI.WREADY),
+    .W_DATA     (M_AXI.WDATA),
+    // B channel
+    .B_VALID    (M_AXI.BVALID),
+    .B_READY    (M_AXI.BREADY),
+    .B_RESP     (M_AXI.BRESP),
+    // AR channel
+    .AR_VALID   (M_AXI.ARVALID),
+    .AR_READY   (M_AXI.ARREADY),
+    .AR_ADDR    (M_AXI.ARADDR),
+    // R channel
+    .R_VALID    (M_AXI.RVALID),
+    .R_READY    (M_AXI.RREADY),
+    .R_DATA     (M_AXI.RDATA),
+    .R_RESP     (M_AXI.RRESP)
   );
-
-// DUT-VIP connection
-assign axi_if.AW_VALID = M_AXI.AWVALID;
-assign axi_if.AW_ADDR  = M_AXI.AWADDR;
-assign axi_if.W_VALID  = M_AXI.WVALID;
-assign axi_if.W_DATA   = M_AXI.WDATA;
-assign axi_if.B_READY  = M_AXI.BREADY;
-assign axi_if.AR_VALID = M_AXI.ARVALID;
-assign axi_if.AR_ADDR  = M_AXI.ARADDR;
-assign axi_if.R_READY  = M_AXI.RREADY;
-
-assign M_AXI.AWREADY = axi_if.AW_READY;
-assign M_AXI.WREADY  = axi_if.W_READY;
-assign M_AXI.BVALID  = axi_if.B_VALID;
-assign M_AXI.BRESP   = axi_if.B_RESP;
-assign M_AXI.ARREADY = axi_if.AR_READY;
-assign M_AXI.RVALID  = axi_if.R_VALID;
-assign M_AXI.RDATA   = axi_if.R_DATA;
-assign M_AXI.RRESP   = axi_if.R_RESP;
 
 // clk creation
 initial aclk = 0;
