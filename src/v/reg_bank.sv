@@ -20,7 +20,7 @@ module reg_bank (
   logic [3:0]  mem_sel;
   logic [7:0]  operandA;
   logic [7:0]  operandB;
-  opcode_t     opp_code;
+  logic [2:0]  opp_code;  // Changed from opcode_t to logic [2:0]
   logic [31:0] mem_op_result;
   logic        mem_en;
   logic [7:0]  result;
@@ -35,7 +35,7 @@ module reg_bank (
   // ALU adresses mapping
   assign operandA   = reg_bank[0][7:0];
   assign operandB   = reg_bank[1][7:0];
-  assign opp_code   = opcode_t'(reg_bank[2][2:0]);
+  assign opp_code   = reg_bank[2][2:0];  // Direct assignment without enum cast
   assign mem_sel    = reg_bank[4][3:0]; // holds index of register for memory operations
   // reg_bank[3][7:0] <= result - used in sequential logic
 
@@ -48,13 +48,16 @@ module reg_bank (
   );
 
   always_comb begin
-    // Memory operations
+    // Default to prevent latches
+    mem_op_result = 32'h00;
+    
+    // Memory operations - use literal values instead of enum
     if (mem_en) begin
       case (opp_code)
-        M_PLUS  : mem_op_result = reg_bank[mem_sel] + reg_bank[3][7:0]; // M+
-        M_MINUS : mem_op_result = reg_bank[mem_sel] - reg_bank[3][7:0]; // M-
-        MR      : mem_op_result = reg_bank[mem_sel];                    // MR
-        MC      : mem_op_result = 32'h00;                               // MC
+        3'b100  : mem_op_result = reg_bank[mem_sel] + reg_bank[3][7:0]; // M_PLUS
+        3'b101  : mem_op_result = reg_bank[mem_sel] - reg_bank[3][7:0]; // M_MINUS
+        3'b110  : mem_op_result = reg_bank[mem_sel];                    // MR
+        3'b111  : mem_op_result = 32'h00;                               // MC
         default : mem_op_result = 32'h00;
       endcase
     end
@@ -71,7 +74,7 @@ module reg_bank (
       // Memory operations
       if (opp_code[2] == 1'b1) begin
         reg_bank[mem_sel] <= mem_op_result;
-      end else if (opp_code == LOAD_A) begin
+      end else if (opp_code == 3'b011) begin  // LOAD_A literal value
         // load value from mem as operandA
         reg_bank[0][7:0] <= reg_bank[mem_sel][7:0];
       end
