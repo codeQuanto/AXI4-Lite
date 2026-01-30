@@ -160,15 +160,24 @@ initial begin : main_test_b
   // ===== TESTY OPERACJI PAMIECIOWYCH =====
   $display("\n[TEST 6] Memory Operations (M+, M-, MR, MC)");
   
-  // Setup ALU: ADD 15 + 0 = 15
-  $display("   Setting up ALU: 15 + 0 = 15");
-  axi_master.AXI4LITE_WRITE_BURST(32'h0000_0000, 0, 32'd15, resp);
+  // Bezpośredni zapis do R5
+  $display("   Zapis wartosci 10 do reg[5]");
+  axi_master.AXI4LITE_WRITE_BURST(32'h0000_0014, 0, 32'd10, resp);  // reg[5] = 10
+  #200;
+  axi_master.AXI4LITE_READ_BURST(32'h0000_0014, 0, rdata, resp);
+  if (rdata == 10) $display("      [PASS] reg[5] = %0d (expected 10)", rdata);
+  else $error("      [FAIL] reg[5] = %0d (expected 10)", rdata);
+  #200;
+
+  // Setup ALU: ADD 5 + 0 = 5 (wartość do dodania)
+  $display("   Setting up ALU: 5 + 0 = 5");
+  axi_master.AXI4LITE_WRITE_BURST(32'h0000_0000, 0, 32'd5, resp);
   axi_master.AXI4LITE_WRITE_BURST(32'h0000_0004, 0, 32'd0, resp);
   axi_master.AXI4LITE_WRITE_BURST(32'h0000_0008, 0, 32'd0, resp);  // ADD
   #200;
 
-  // M+ test: reg[5] += 15 (result: 15)
-  $display("   -> M+ (add 15 to reg[5])");
+  // M+ test: reg[5] += 5 (result: 15)
+  $display("   -> M+ (add 5 to reg[5], 10 + 5 = 15)");
   axi_master.AXI4LITE_WRITE_BURST(32'h0000_0010, 0, 32'd5, resp);  // mem_sel = 5
   axi_master.AXI4LITE_WRITE_BURST(32'h0000_0008, 0, 32'd4, resp);  // opcode = M+ (0x4)
   #200;
@@ -177,29 +186,21 @@ initial begin : main_test_b
   else $error("      [FAIL] reg[5] = %0d (expected 15)", rdata);
   #200;
 
-  // M+ again: reg[5] += 15 (result: 30)
-  $display("   -> M+ again (accumulate 15, total = 30)");
-  axi_master.AXI4LITE_WRITE_BURST(32'h0000_0008, 0, 32'd4, resp);  // opcode = M+
-  #200;
-  axi_master.AXI4LITE_READ_BURST(32'h0000_0014, 0, rdata, resp);
-  if (rdata == 30) $display("      [PASS] reg[5] = %0d (expected 30)", rdata);
-  else $error("      [FAIL] reg[5] = %0d (expected 30)", rdata);
-  #200;
-
-  // Setup ALU: ADD 8 + 0 = 8
-  $display("   Setting up ALU: 8 + 0 = 8");
-  axi_master.AXI4LITE_WRITE_BURST(32'h0000_0000, 0, 32'd8, resp);
+  // Setup ALU dla M-: ADD 3 + 0 = 3
+  $display("   Setting up ALU: 3 + 0 = 3");
+  axi_master.AXI4LITE_WRITE_BURST(32'h0000_0000, 0, 32'd3, resp);
   axi_master.AXI4LITE_WRITE_BURST(32'h0000_0004, 0, 32'd0, resp);
   axi_master.AXI4LITE_WRITE_BURST(32'h0000_0008, 0, 32'd0, resp);  // ADD
   #200;
 
-  // M- test: reg[5] -= 8 (result: 22)
-  $display("   -> M- (subtract 8 from reg[5], 30 - 8 = 22)");
+  // M- test: reg[5] -= 3 (result: 12)
+  $display("   -> M- (subtract 3 from reg[5], 15 - 3 = 12)");
+  axi_master.AXI4LITE_WRITE_BURST(32'h0000_0010, 0, 32'd5, resp);  // mem_sel = 5
   axi_master.AXI4LITE_WRITE_BURST(32'h0000_0008, 0, 32'd5, resp);  // opcode = M- (0x5)
   #200;
   axi_master.AXI4LITE_READ_BURST(32'h0000_0014, 0, rdata, resp);
-  if (rdata == 22) $display("      [PASS] reg[5] = %0d (expected 22)", rdata);
-  else $error("      [FAIL] reg[5] = %0d (expected 22)", rdata);
+  if (rdata == 12) $display("      [PASS] reg[5] = %0d (expected 12)", rdata);
+  else $error("      [FAIL] reg[5] = %0d (expected 12)", rdata);
   #200;
 
   // MR test: read reg[5] to reg[3]
@@ -208,12 +209,13 @@ initial begin : main_test_b
   axi_master.AXI4LITE_WRITE_BURST(32'h0000_0008, 0, 32'd6, resp);  // opcode = MR (0x6)
   #200;
   axi_master.AXI4LITE_READ_BURST(32'h0000_000C, 0, rdata, resp);
-  if (rdata == 22) $display("      [PASS] reg[3] = %0d (expected 22)", rdata);
-  else $error("      [FAIL] reg[3] = %0d (expected 22)", rdata);
+  if (rdata == 12) $display("      [PASS] reg[3] = %0d (expected 12)", rdata);
+  else $error("      [FAIL] reg[3] = %0d (expected 12)", rdata);
   #200;
 
   // MC test: clear reg[5]
   $display("   -> MC (clear reg[5])");
+  axi_master.AXI4LITE_WRITE_BURST(32'h0000_0010, 0, 32'd5, resp);  // mem_sel = 5
   axi_master.AXI4LITE_WRITE_BURST(32'h0000_0008, 0, 32'd7, resp);  // opcode = MC (0x7)
   #200;
   axi_master.AXI4LITE_READ_BURST(32'h0000_0014, 0, rdata, resp);

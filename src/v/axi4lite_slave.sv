@@ -1,4 +1,4 @@
-`include "params.vh"
+//`include "params.vh"
 
 module axi4lite_slave (
   input  logic                      A_CLK,
@@ -35,9 +35,9 @@ module axi4lite_slave (
   logic w_handshake;
   logic aw_handshake_flag;
   logic w_handshake_flag;
-  logic [AXI_ADDR_WIDTH-1:0] aw_addr_latched;  // Fixed: was AXI_DATA_WIDTH
-  logic [AXI_ADDR_WIDTH-1:0] ar_addr_latched;  // Fixed: was AXI_DATA_WIDTH
-  logic write_en;
+  (* MARK_DEBUG="TRUE" *) logic [AXI_ADDR_WIDTH-1:0] aw_addr_latched;  // Fixed: was AXI_DATA_WIDTH
+  (* MARK_DEBUG="TRUE" *) logic [AXI_ADDR_WIDTH-1:0] ar_addr_latched;  // Fixed: was AXI_DATA_WIDTH
+  (* MARK_DEBUG="TRUE" *) logic write_en;
   logic [AXI_DATA_WIDTH-1:0] read_data;
 
   // reg_bank instantion

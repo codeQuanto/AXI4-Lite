@@ -1,9 +1,9 @@
 module reg_bank (
   input  logic        clk,
   input  logic        reset_n,
-  input  logic        write_en,
-  input  logic [31:0] write_addr,
-  input  logic [31:0] write_data,
+  (* MARK_DEBUG="TRUE" *) input  logic        write_en,
+  (* MARK_DEBUG="TRUE" *) input  logic [31:0] write_addr,
+  (* MARK_DEBUG="TRUE" *) input  logic [31:0] write_data,
   input  logic [31:0] read_addr,
   output logic [31:0] read_data
 );
@@ -12,13 +12,13 @@ module reg_bank (
   logic [31:0] reg_bank [15:0];
 
   // mapped addresses - direct use of lower 4 bits
-  logic [3:0]  write_idx;
-  logic [3:0]  read_idx;
+  (* MARK_DEBUG="TRUE" *) logic [3:0]  write_idx;
+  (* MARK_DEBUG="TRUE" *) logic [3:0]  read_idx;
 
   logic [3:0]  mem_sel;
   logic [7:0]  operandA;
   logic [7:0]  operandB;
-  logic [2:0]  opp_code;  // Changed from opcode_t to logic [2:0]
+  opcode_t     opp_code;
   logic [31:0] mem_op_result;
   logic        mem_en;
   logic [7:0]  result;
@@ -33,7 +33,7 @@ module reg_bank (
   // ALU adresses mapping
   assign operandA   = reg_bank[0][7:0];
   assign operandB   = reg_bank[1][7:0];
-  assign opp_code   = reg_bank[2][2:0];  // Direct assignment without enum cast
+  assign opp_code   = opcode_t'(reg_bank[2][2:0]);  // Cast to opcode_t
   assign mem_sel    = reg_bank[4][3:0]; // holds index of register for memory operations
   // reg_bank[3][7:0] <= result - used in sequential logic
 
@@ -47,15 +47,15 @@ module reg_bank (
 
   always_comb begin
     // Default to prevent latches
-    mem_op_result = 32'h00;
+    //mem_op_result = 32'h00;
     
-    // Memory operations - use literal values instead of enum
+    // Memory operations - use enum values
     if (mem_en) begin
       case (opp_code)
-        3'b100  : mem_op_result = reg_bank[mem_sel] + reg_bank[3][7:0]; // M_PLUS
-        3'b101  : mem_op_result = reg_bank[mem_sel] - reg_bank[3][7:0]; // M_MINUS
-        3'b110  : mem_op_result = reg_bank[mem_sel];                    // MR
-        3'b111  : mem_op_result = 32'h00;                               // MC
+        M_PLUS  : mem_op_result = reg_bank[mem_sel] + reg_bank[3][7:0];
+        M_MINUS : mem_op_result = reg_bank[mem_sel] - reg_bank[3][7:0];
+        MR      : mem_op_result = reg_bank[mem_sel];
+        MC      : mem_op_result = 32'h00;
         default : mem_op_result = 32'h00;
       endcase
     end
@@ -73,7 +73,7 @@ module reg_bank (
       // Memory operations
       if (opp_code[2] == 1'b1) begin
         reg_bank[mem_sel] <= mem_op_result;
-      end else if (opp_code == 3'b011) begin  // LOAD_A literal value
+      end else if (opp_code == LOAD_A) begin
         // load value from mem as operandA
         reg_bank[0][7:0] <= reg_bank[mem_sel][7:0];
       end
